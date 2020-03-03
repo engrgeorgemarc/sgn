@@ -14,6 +14,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+const nodeCount = 4
+
 func setupNewSGNEnv(sgnParams *tc.SGNParams) {
 	log.Infoln("Deploy guard contract")
 	if sgnParams == nil {
@@ -46,7 +48,7 @@ func setupNewSGNEnv(sgnParams *tc.SGNParams) {
 	tc.ChkErr(err, "Failed to make prepare-sgn-data")
 
 	log.Infoln("Updating config files of SGN nodes")
-	for i := 0; i < 3; i++ {
+	for i := 0; i < nodeCount; i++ {
 		configPath := fmt.Sprintf("../../../docker-volumes/node%d/config.json", i)
 		viper.SetConfigFile(configPath)
 		err = viper.ReadInConfig()

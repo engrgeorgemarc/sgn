@@ -13,7 +13,7 @@
 proxy_app = "tcp://127.0.0.1:26658"
 
 # A custom human readable name for this node
-moniker = "node3"
+moniker = "node1"
 
 # If this node is many blocks behind the tip of the chain, FastSync
 # allows them to catchup quickly by downloading blocks in parallel
@@ -166,7 +166,7 @@ laddr = "tcp://0.0.0.0:26656"
 # If empty, will use the same port as the laddr,
 # and will introspect on the listener or use UPnP
 # to figure out the address.
-external_address = ""
+external_address = "sgnnode1:26656"
 
 # Comma separated list of seed nodes to connect to
 seeds = ""
