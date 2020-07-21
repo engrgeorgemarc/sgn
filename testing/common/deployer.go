@@ -12,6 +12,7 @@ import (
 	"github.com/celer-network/sgn/testing/channel-eth-go/deploy"
 	"github.com/celer-network/sgn/testing/channel-eth-go/ledger"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -66,7 +67,7 @@ func DeployDPoSSGNContracts(sgnParams *SGNParams) (*types.Transaction, mainchain
 	// TODO: register SGN address on DPoS contract
 	dpos, err := mainchain.NewDPoS(dposAddr, EthClient)
 	ChkErr(err, "failed to new DPoS instance")
-	EtherBaseAuth.GasLimit = 8000000
+	EtherBaseAuth.GasLimit = 2000000
 	tx, err := dpos.RegisterSidechain(EtherBaseAuth, sgnAddr)
 	EtherBaseAuth.GasLimit = 0
 	ChkErr(err, "failed to register SGN address on DPoS contract")
@@ -100,6 +101,7 @@ func DeployCommand() *cobra.Command {
 			if err != nil {
 				return
 			}
+			EtherBaseAuth.GasPrice = big.NewInt(20e9) // 20 gwei
 
 			if ethurl == LocalGeth {
 				SetEthBaseKs("./docker-volumes/geth-env")
@@ -108,20 +110,20 @@ func DeployCommand() *cobra.Command {
 				ChkErr(err, "fund client0 and client1")
 			}
 
-			ledgerAddr := DeployLedgerContract()
-			viper.Set(common.FlagEthLedgerAddress, ledgerAddr)
+			// ledgerAddr := DeployLedgerContract()
+			// viper.Set(common.FlagEthLedgerAddress, ledgerAddr)
 
-			_, erc20Addr, erc20 := DeployERC20Contract()
+			// _, erc20Addr, erc20 := DeployERC20Contract()
 			sgnParams := &SGNParams{
-				CelrAddr:               erc20Addr,
-				GovernProposalDeposit:  big.NewInt(1), // TODO: use a more practical value
-				GovernVoteTimeout:      big.NewInt(1), // TODO: use a more practical value
-				BlameTimeout:           big.NewInt(5760),
+				CelrAddr:               ethcommon.HexToAddress("0xb37f671dFc6C7c03462C76313Ec1a35b0c0A76d5"),
+				GovernProposalDeposit:  big.NewInt(10000), // TODO: use a more practical value
+				GovernVoteTimeout:      big.NewInt(500),   // TODO: use a more practical value
+				BlameTimeout:           big.NewInt(100),
 				MinValidatorNum:        big.NewInt(3),
-				MaxValidatorNum:        big.NewInt(7),
+				MaxValidatorNum:        big.NewInt(9),
 				MinStakingPool:         big.NewInt(10000),
-				IncreaseRateWaitTime:   big.NewInt(1), // TODO: use a more practical value
-				SidechainGoLiveTimeout: big.NewInt(5760),
+				IncreaseRateWaitTime:   big.NewInt(1000), // TODO: use a more practical value
+				SidechainGoLiveTimeout: big.NewInt(100),
 			}
 			tx, dposAddr, sgnAddr := DeployDPoSSGNContracts(sgnParams)
 			WaitMinedWithChk(context.Background(), EthClient, tx, BlockDelay, PollingInterval, "DeployDPoSContracts")
@@ -131,13 +133,13 @@ func DeployCommand() *cobra.Command {
 			err = viper.WriteConfig()
 			ChkErr(err, "failed to write config")
 
-			if ethurl == LocalGeth {
-				amt := new(big.Int)
-				amt.SetString("1"+strings.Repeat("0", 19), 10)
-				tx, err := erc20.Approve(EtherBaseAuth, dposAddr, amt)
-				ChkErr(err, "failed to approve erc20")
-				WaitMinedWithChk(context.Background(), EthClient, tx, BlockDelay, PollingInterval, "approve erc20")
-			}
+			// if ethurl == LocalGeth {
+			// 	amt := new(big.Int)
+			// 	amt.SetString("1"+strings.Repeat("0", 19), 10)
+			// 	tx, err := erc20.Approve(EtherBaseAuth, dposAddr, amt)
+			// 	ChkErr(err, "failed to approve erc20")
+			// 	WaitMinedWithChk(context.Background(), EthClient, tx, BlockDelay, PollingInterval, "approve erc20")
+			// }
 
 			return nil
 		},
